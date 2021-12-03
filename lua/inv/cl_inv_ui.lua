@@ -21,6 +21,8 @@ function OpenInvPnl()
 
   invPnl.itemPnl.ShowItems = function()
     invPnl.itemPnl.scroll.icons:Clear()
+    invPnl.itemPnl.scroll.icons:InvalidateLayout(true)
+
     for i = 1, Inv.Capacity do
       local item = Inv.Items[i]
       local itemPnl = invPnl.itemPnl.scroll.icons:Add("DPanel")

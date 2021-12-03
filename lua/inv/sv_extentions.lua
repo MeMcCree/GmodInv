@@ -35,6 +35,14 @@ function _P:LoadInv()
   end
 end
 
+function _P:SaveInv()
+  local filePath = "memccreesinv/userdata/u_" .. self:AccountID() .. ".json"
+
+  file.CreateDir("memccreesinv/userdata")
+  SaveFile(filePath, self.Inv)
+end
+
+
 function _P:CanPickupItem(item)
   if (self.Inv.Capacity + 1 > self.Inv.MaxCapacity) then return false end
   if (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then return false end
