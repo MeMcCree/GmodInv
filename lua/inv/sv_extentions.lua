@@ -24,7 +24,7 @@ function _P:LoadInv()
   local filePath = "memccreesinv/userdata/u_" .. self:AccountID() .. ".json"
   local fileTable = LoadFile(filePath)
 
-  if (!fileTable.Items) then
+  if (not fileTable.Items) then
     self:InitInv()
     file.CreateDir("memccreesinv/userdata")
     SaveFile(filePath, self.Inv)
@@ -37,7 +37,7 @@ end
 
 function _P:CanPickupItem(item)
   if (self.Inv.Capacity + 1 > self.Inv.MaxCapacity) then return false end
-  if (HasValue(InvBlacklist, item.classname) || !HasValue(InvWhitelist, item.classname)) then return false end
+  if (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then return false end
   return true
 end
 
@@ -79,10 +79,10 @@ end
 
 function _P:PickupItem()
   local target = self:PickupTrace()
-  if (!IsValid(target)) then return end
+  if (not IsValid(target)) then return end
 
   local item = target:GetItem()
-  if (!self:CanPickupItem(item)) then return end
+  if (not self:CanPickupItem(item)) then return end
 
   self:AddItem(item)
   self:SendItemToClient(item)

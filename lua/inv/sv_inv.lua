@@ -1,11 +1,11 @@
 hook.Add("PlayerSpawn", "LoadInv", function(ply)
-  if (!ply.Inv) then
+  if (not ply.Inv) then
     if (ConVars["SaveInv"]:GetBool()) then
       ply:LoadInv()
     else
       ply:InitInv()
     end
-  elseif (!ConVars["KeepInv"]:GetBool()) then
+  elseif (not ConVars["KeepInv"]:GetBool()) then
     ply:InitInv()
   end
 end)

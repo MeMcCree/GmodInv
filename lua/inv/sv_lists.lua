@@ -19,31 +19,37 @@ local function RemoveFromListClient(id, args)
 end
 
 concommand.Add("inv_whitelist_add", function(ply, cmd, args)
-    ParseAddArgs(InvWhitelist, args)
-    AddToListClient(1, args)
+  if (not ply:IsAdmin()) then return end
+  ParseAddArgs(InvWhitelist, args)
+  AddToListClient(1, args)
 end)
 
 concommand.Add("inv_blacklist_add", function(ply, cmd, args)
+  if (not ply:IsAdmin()) then return end
   ParseAddArgs(InvWhitelist, args)
   AddToListClient(2, args)
 end)
 
 concommand.Add("inv_whitelist_remove", function(ply, cmd, args)
+  if (not ply:IsAdmin()) then return end
   ParseRemoveArgs(InvWhitelist, args)
   RemoveFromListClient(1, args)
 end)
 
 concommand.Add("inv_blacklist_remove", function(ply, cmd, args)
+  if (not ply:IsAdmin()) then return end
   ParseRemoveArgs(InvWhitelist, args)
   RemoveFromListClient(2, args)
 end)
 
 concommand.Add("inv_whitelist_empty", function(ply, cmd, args)
+  if (not ply:IsAdmin()) then return end
   InvWhitelist = {}
   EmptyListClient(1)
 end)
 
 concommand.Add("inv_blacklist_empty", function(ply, cmd, args)
+  if (not ply:IsAdmin()) then return end
   InvBlacklist = {}
   EmptyListClient(2)
 end)
