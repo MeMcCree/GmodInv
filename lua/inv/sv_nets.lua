@@ -8,6 +8,12 @@ local nets = {
   "EmptyListClient",
   "AddToListClient",
   "RemoveFromListClient",
+  "SendItemToStorageClient",
+  "StorageRemoveItemByIdClient",
+  "ChangeStorageMaxCapClient",
+  "OpenStorage",
+  "MoveToStorage",
+  "MoveFromStorage",
 }
 
 for _, v in ipairs(nets) do

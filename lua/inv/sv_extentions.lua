@@ -35,9 +35,23 @@ function _P:LoadInv()
   end
 end
 
+function _P:SaveInv()
+  local filePath = "memccreesinv/userdata/u_" .. self:AccountID() .. ".json"
+
+  file.CreateDir("memccreesinv/userdata")
+  SaveFile(filePath, self.Inv)
+end
+
+
 function _P:CanPickupItem(item)
   if (self.Inv.Capacity + 1 > self.Inv.MaxCapacity) then return false end
-  if (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then return false end
+
+  if (ConVars["AnyItem"]:GetBool()) then
+    return not (string.StartWith(item.classname, "func_") || (string.StartWith(item.classname, "prop_") && item.classname != "prop_physics"))
+  elseif (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then
+    return false
+  end
+  
   return true
 end
 

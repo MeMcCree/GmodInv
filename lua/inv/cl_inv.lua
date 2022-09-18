@@ -17,8 +17,11 @@ net.Receive("SendItemToClient", function()
   local item = net.ReadTable()
   Inv.Capacity = Inv.Capacity + 1
   Inv.Items[Inv.Capacity] = item
+
   if (IsValid(invPnl)) then
-      invPnl.itemPnl.ShowItems()
+    invPnl.itemPnl.ShowItems()
+  elseif (IsValid(storagePnl)) then
+    storagePnl.invItems.ShowItems()
   end
 end)
 
@@ -30,7 +33,10 @@ net.Receive("RemoveItemByIdClient", function()
   for i = id, Inv.Capacity do
     Inv.Items[i] = Inv.Items[i + 1]
   end
+  
   if (IsValid(invPnl)) then
-      invPnl.itemPnl.ShowItems()
+    invPnl.itemPnl.ShowItems()
+  elseif (IsValid(storagePnl)) then
+    storagePnl.invItems.ShowItems()
   end
 end)

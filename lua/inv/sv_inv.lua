@@ -12,9 +12,7 @@ end)
 
 hook.Add("PlayerDisconnected", "SaveInvOnDisconnect", function(ply)
   if (ConVars["SaveInv"]:GetBool()) then
-    local filePath = "memccreesinv/userdata/u_" .. ply:AccountID() .. ".json"
-    file.CreateDir("memccreesinv/userdata")
-    SaveFile(filePath, ply.Inv)
+    ply:SaveInv()
   end
 end)
 
