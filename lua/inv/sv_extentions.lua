@@ -45,7 +45,13 @@ end
 
 function _P:CanPickupItem(item)
   if (self.Inv.Capacity + 1 > self.Inv.MaxCapacity) then return false end
-  if (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then return false end
+
+  if (ConVars["AnyItem"]:GetBool()) then
+    return not (string.StartWith(item.classname, "func_") || (string.StartWith(item.classname, "prop_") && item.classname != "prop_physics"))
+  elseif (HasValue(InvBlacklist, item.classname) || not HasValue(InvWhitelist, item.classname)) then
+    return false
+  end
+  
   return true
 end
 
