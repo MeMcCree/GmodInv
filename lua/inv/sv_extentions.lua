@@ -92,11 +92,8 @@ end
 
 function _P:RemoveItemById(id)
   if (id < 1 || id > self.Inv.Capacity) then return end
-
   self.Inv.Capacity = self.Inv.Capacity - 1
-  for i = id, self.Inv.Capacity do
-    self.Inv.Items[i] = self.Inv.Items[i + 1]
-  end
+  table.remove(self.Inv.Items, id)
 end
 
 function _P:RemoveItemByIdClient(id)
@@ -143,10 +140,24 @@ end
 function _P:UseItem(id, distance)
   local droppedEnt = self:DropItem(id, distance)
 
-  if (IsValid(droppedEnt)) then
+  if (IsValid(droppedEnt) && !string.find(droppedEnt:GetClass(), "prop_")) then
     droppedEnt:Use(self)
-    if (droppedEnt:GetClass() == "prop_physics") then
-      DropEntityIfHeld(droppedEnt)
-    end
+  end
+end
+
+function _P:DropAmmo(ammo, distance)
+  self:RemoveAmmo(ammo[2], ammo[1])
+  local tr = util.TraceLine({
+    start = self:EyePos() - self:EyeAngles():Forward() * (distance / 2),
+    endpos = self:EyePos() + self:EyeAngles():Forward() * distance,
+    filter = self
+  })
+  local droppedEnt = ents.Create("gws_ammo")
+  if (IsValid(droppedEnt)) then
+    droppedEnt:SetPos(tr.HitPos + tr.HitNormal * 20)
+    droppedEnt:SetAngles(Angle(0, 0, 0))
+    droppedEnt:Spawn()
+    droppedEnt:Activate()
+    droppedEnt.Ammo = ammo
   end
 end

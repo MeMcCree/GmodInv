@@ -10,7 +10,7 @@ function PANEL:Init()
   self.header.clsBtn = self.header:Add("DButton")
   self.header.clsBtn:Dock(RIGHT)
   self.header.clsBtn:SetText("X")
-  self.header.clsBtn:SetFont("DermaLarge")
+  self.header.clsBtn:SetFont("inv_Title")
   self.header.clsBtn:SetTextColor(InvUI.Colors.Text)
   self.header.clsBtn.Paint = nil
   self.header.clsBtn.DoClick = function(pnl)
@@ -19,7 +19,7 @@ function PANEL:Init()
 
   self.header.title = self.header:Add("DLabel")
   self.header.title:Dock(LEFT)
-  self.header.title:SetFont("DermaLarge")
+  self.header.title:SetFont("inv_Title")
   self.header.title:SetTextColor(InvUI.Colors.Text)
   self.header.title:SetTextInset(16, 0)
 end

@@ -9,7 +9,9 @@ net.Receive("ClearInvClient", function()
   Inv.Capacity = 0
   Inv.MaxCapacity = MaxDefInvCap
   if (IsValid(invPnl)) then
-      invPnl.itemPnl.ShowItems()
+    invPnl.itemPnl.ShowItems()
+  elseif (IsValid(storagePnl)) then
+    storagePnl.invItems.ShowItems()
   end
 end)
 
@@ -18,7 +20,9 @@ net.Receive("SendItemToClient", function()
   Inv.Capacity = Inv.Capacity + 1
   Inv.Items[Inv.Capacity] = item
   if (IsValid(invPnl)) then
-      invPnl.itemPnl.ShowItems()
+    invPnl.itemPnl.ShowItems()
+  elseif (IsValid(storagePnl)) then
+    storagePnl.invItems.ShowItems()
   end
 end)
 
@@ -27,10 +31,18 @@ net.Receive("RemoveItemByIdClient", function()
   if (id < 1 || id > Inv.Capacity) then return end
 
   Inv.Capacity = Inv.Capacity - 1
-  for i = id, Inv.Capacity do
-    Inv.Items[i] = Inv.Items[i + 1]
-  end
+  table.remove(Inv.Items, id)
   if (IsValid(invPnl)) then
-      invPnl.itemPnl.ShowItems()
+    invPnl.itemPnl.ShowItems()
+  elseif (IsValid(storagePnl)) then
+    storagePnl.invItems.ShowItems()
+  end
+end)
+
+net.Receive("CloseAllMenus", function()
+  if (IsValid(invPnl)) then
+    invPnl:Remove()
+  elseif (IsValid(storagePnl)) then
+    storagePnl:Remove()
   end
 end)

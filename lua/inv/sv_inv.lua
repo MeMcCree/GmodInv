@@ -29,6 +29,18 @@ hook.Add("ShutDown", "SaveInvOnShutDown", function()
   end
 end)
 
+hook.Add("PlayerDeath", "DropLootOnDeath", function(victim, inflictor, attacker)
+  if (not ConVars["KeepInv"]:GetBool()) then
+    local lootdrop = ents.Create("lootdrop")
+    if (IsValid(lootdrop)) then
+      lootdrop:SetPos(victim:GetPos())
+      lootdrop:Spawn()
+      lootdrop:Activate()
+      lootdrop.TempStorage = victim.Inv
+      lootdrop.TempAmmo = victim:GetAmmo()
+    end
+  end
+end)
 
 concommand.Add("inv_pickup", function(ply)
   ply:PickupItem()
@@ -43,3 +55,10 @@ net.Receive("UseItem", function(len, ply)
   local id = net.ReadUInt(16)
   ply:UseItem(id, 40)
 end)
+
+net.Receive("DropAmmo", function(len, ply)
+  local ammoId = net.ReadUInt(8)
+  local amount = net.ReadUInt(16)
+  ply:DropAmmo({ammoId, amount}, 80)
+end)
+

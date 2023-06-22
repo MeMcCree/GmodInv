@@ -10,6 +10,13 @@ function LoadFile(filePath)
   return fileTable
 end
 
+function SendCompressedTableCl(networkStr, sendTo, table)
+  local data = util.Compress(util.TableToJSON(table))
+  net.Start(networkStr)
+    net.WriteData(data)
+  net.Send(sendTo)
+end
+
 function AddToTable(tbl, val)
   table.insert(tbl, val)
 end
