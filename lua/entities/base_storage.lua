@@ -20,7 +20,7 @@ if (SERVER) then
       self.Storage = {}
       self.Storage.Items = {}
       self.Storage.Capacity = 0
-      self.Storage.MaxCapacity = MaxDefInvCap
+      self.Storage.MaxCapacity = 999
       self.IsUsed = false
   end
 
@@ -173,14 +173,14 @@ else
     end
 
     storagePnl.invItems.ShowItems = function()
-      storagePnl.invItems.scroll.icons:Clear()
-      storagePnl.invItems.scroll:InvalidateLayout(true)
+      storagePnl.invItems.icons:Clear()
+      storagePnl.invItems.icons:InvalidateLayout(true)
 
       for i = 1, Inv.Capacity do
         local item = Inv.Items[i]
-        local itemPnl = storagePnl.invItems.scroll.icons:Add("DPanel")
+        local itemPnl = storagePnl.invItems.icons:Add("DButton")
 
-        itemPnl:SetSize(ScrH() / 10, ScrH() / 9.5)
+        itemPnl:SetSize(ScrH() / 10, ScrH() / 10)
         itemPnl.Paint = function(pnl, w, h)
           draw.RoundedBox(0, 0, 0, w, h, InvUI.Colors.ItemColor)
           surface.SetDrawColor(InvUI.Colors.Primary.r,
@@ -190,36 +190,27 @@ else
           surface.DrawOutlinedRect(0, 0, w, h, 1)
         end
 
-        itemPnl.btnBar = itemPnl:Add("DPanel")
-        itemPnl.btnBar:Dock(BOTTOM)
-        itemPnl.btnBar:SetTall(ScrH() / 50)
-        itemPnl.btnBar.Paint = nil
-
-        itemPnl.btnBar.moveToBtn = itemPnl.btnBar:Add("DButton")
-        itemPnl.btnBar.moveToBtn:Dock(FILL)
-        itemPnl.btnBar.moveToBtn:SetFont("inv_ItemButtons")
-        itemPnl.btnBar.moveToBtn:SetTextColor(InvUI.Colors.Text)
-        itemPnl.btnBar.moveToBtn:SetText("Move to")
-        itemPnl.btnBar.moveToBtn.Paint = nil
-        itemPnl.btnBar.moveToBtn.DoClick = function(pnl)
-          net.Start("MoveToStorage")
-            net.WriteEntity(self)
-            net.WriteUInt(i, 16)
-          net.SendToServer()
-        end
-
-        itemPnl.icon = itemPnl:Add("ModelImage")
+        itemPnl.icon = itemPnl:Add("SpawnIcon")
         itemPnl.icon:Dock(FILL)
         itemPnl.icon:SetModel(item.model)
+        itemPnl.icon:SetTooltip(nil)
+        itemPnl.icon.DoClick = function(pnl)
+            net.Start("MoveToStorage")
+              net.WriteEntity(self)
+              net.WriteUInt(i, 16)
+            net.SendToServer()
+        end
+
       end
     end
 
     storagePnl.storageItems.ShowItems = function()
-      storagePnl.storageItems.scroll.icons:Clear()
-      storagePnl.storageItems.scroll:InvalidateLayout(true) 
+      storagePnl.storageItems.icons:Clear()
+      storagePnl.storageItems.icons:InvalidateLayout(true)
+
       for i = 1, self.Storage.Capacity do
         local item = self.Storage.Items[i]
-        local itemPnl = storagePnl.storageItems.scroll.icons:Add("DPanel")
+        local itemPnl = storagePnl.storageItems.icons:Add("DPanel")
 
         itemPnl:SetSize(ScrH() / 10, ScrH() / 9.5)
         itemPnl.Paint = function(pnl, w, h)

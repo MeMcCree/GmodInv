@@ -7,7 +7,8 @@ local function AddFont(font, name, size, weight)
   })
 end
 
-AddFont("Roboto", "ItemButtons", 24, 240)
+AddFont("Roboto", "ItemName", 12, 240)
+AddFont("Roboto", "Title", 24, 240)
 
 function OpenInvPnl()
   invPnl = vgui.Create("inv_frame")
@@ -20,14 +21,14 @@ function OpenInvPnl()
   invPnl.itemPnl:Dock(FILL)
 
   invPnl.itemPnl.ShowItems = function()
-    invPnl.itemPnl.scroll.icons:Clear()
-    invPnl.itemPnl.scroll.icons:InvalidateLayout(true)
+    invPnl.itemPnl.icons:Clear()
+    invPnl.itemPnl.icons:InvalidateLayout(true)
 
     for i = 1, Inv.Capacity do
       local item = Inv.Items[i]
-      local itemPnl = invPnl.itemPnl.scroll.icons:Add("DPanel")
+      local itemPnl = invPnl.itemPnl.icons:Add("DPanel")
 
-      itemPnl:SetSize(ScrH() / 10, ScrH() / 9.5)
+      itemPnl:SetSize(ScrH() / 10, ScrH() / 10)
       itemPnl.Paint = function(pnl, w, h)
         draw.RoundedBox(0, 0, 0, w, h, InvUI.Colors.ItemColor)
         surface.SetDrawColor(InvUI.Colors.Primary.r,
@@ -37,40 +38,35 @@ function OpenInvPnl()
         surface.DrawOutlinedRect(0, 0, w, h, 1)
       end
 
-      itemPnl.btnBar = itemPnl:Add("DPanel")
-      itemPnl.btnBar:Dock(BOTTOM)
-      itemPnl.btnBar:SetTall(ScrH() / 50)
-      itemPnl.btnBar.Paint = nil
-
-      itemPnl.btnBar.dropBtn = itemPnl.btnBar:Add("DButton")
-      itemPnl.btnBar.dropBtn:Dock(LEFT)
-      itemPnl.btnBar.dropBtn:SetWide(ScrH() / 20)
-      itemPnl.btnBar.dropBtn:SetFont("inv_ItemButtons")
-      itemPnl.btnBar.dropBtn:SetTextColor(InvUI.Colors.Text)
-      itemPnl.btnBar.dropBtn:SetText("Drop")
-      itemPnl.btnBar.dropBtn.Paint = nil
-      itemPnl.btnBar.dropBtn.DoClick = function(pnl)
-        net.Start("DropItem")
-          net.WriteUInt(i, 16)
-        net.SendToServer()
-      end
-
-      itemPnl.btnBar.useBtn = itemPnl.btnBar:Add("DButton")
-      itemPnl.btnBar.useBtn:Dock(RIGHT)
-      itemPnl.btnBar.useBtn:SetWide(ScrH() / 20)
-      itemPnl.btnBar.useBtn:SetFont("inv_ItemButtons")
-      itemPnl.btnBar.useBtn:SetTextColor(InvUI.Colors.Text)
-      itemPnl.btnBar.useBtn:SetText("Use")
-      itemPnl.btnBar.useBtn.Paint = nil
-      itemPnl.btnBar.useBtn.DoClick = function(pnl)
-        net.Start("UseItem")
-          net.WriteUInt(i, 16)
-        net.SendToServer()
-      end
-
-      itemPnl.icon = itemPnl:Add("ModelImage")
+      itemPnl.icon = itemPnl:Add("SpawnIcon")
       itemPnl.icon:Dock(FILL)
       itemPnl.icon:SetModel(item.model)
+      itemPnl.icon:SetTooltip(nil)
+      itemPnl.icon.DoClick = function(pnl)
+        local ItemMenu = DermaMenu()
+        ItemMenu.DropOption = ItemMenu:AddOption("Drop", function(opt)
+          net.Start("DropItem")
+            net.WriteUInt(i, 16)
+          net.SendToServer()
+        end)
+        ItemMenu.DropOption:SetIcon("icon16/arrow_down.png")
+        ItemMenu.UseOption = ItemMenu:AddOption("Use", function(opt)
+          net.Start("UseItem")
+            net.WriteUInt(i, 16)
+          net.SendToServer()
+        end)
+        ItemMenu.UseOption:SetIcon("icon16/accept.png")
+        ItemMenu:Open()
+      end
+
+      itemPnl.icon.label = itemPnl.icon:Add("DLabel")
+      itemPnl.icon.label:Dock(BOTTOM)
+      itemPnl.icon.label:SetTall(18)
+      itemPnl.icon.label:SetText(item.name)
+      itemPnl.icon.label:SetFont("inv_ItemName")
+      itemPnl.icon.label:SetTextColor(InvUI.Colors.Text)
+      itemPnl.icon.label:SetContentAlignment(5)
+
     end
   end
 

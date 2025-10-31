@@ -1,33 +1,29 @@
 local PANEL = {}
 
 function PANEL:Init()
-  self.scroll = self:Add("DScrollPanel")
-  self.scroll:Dock(FILL)
-  self.scroll:DockMargin(16, 8, 0, 0)
-  self.scroll.Paint = nil
-  local vbar = self.scroll:GetVBar()
-  vbar:SetWide(16)
-  vbar.Paint = nil
-  vbar.btnUp.Paint = nil
-  vbar.btnDown.Paint = nil
-  vbar.btnGrip.Paint = function(pnl, w, h)
-    draw.RoundedBox(32, 0, 0, w, h, InvUI.Colors.Primary)
-  end
+  self.icons = self:Add("DIconLayout")
+  self.icons:Dock(FILL)
+  self.icons:DockMargin(16, 8, 0, 0)
+  self.icons:SetSpaceX(5)
+  self.icons:SetSpaceY(5)
 
-  self.scroll.icons = self.scroll:Add("DIconLayout")
-  self.scroll.icons:Dock(FILL)
-  self.scroll.icons:DockMargin(0, 5, 0, 0)
-  self.scroll.icons:SetSpaceX(5)
-  self.scroll.icons:SetSpaceY(5)
+  self.icons:LerpPositions(0.1, false)
+  self.OnMouseWheeled = function(self, scrollDelta)
+    local left, top, right, bot = self.icons:GetDockMargin()
+    local childSize = self.icons:GetChildren()[1]:GetTall()
+    local min = 8 - self.icons:GetTall() + childSize
+    local max = 8
+    self.icons:DockMargin(16, math.Clamp(top - scrollDelta*8, min, max), 16, 0)
+  end
 end
 
 function PANEL:ShowItems()
-  self.scroll.icons:Clear()
+  self.icons:Clear()
   for i = 1, Inv.Capacity do
     local item = Inv.Items[i]
-    local itemPnl = self.scroll.icons:Add("DPanel")
+    local itemPnl = self.icons:Add("DPanel")
 
-    itemPnl:SetSize(ScrH() / 10, ScrH() / 9.5)
+    itemPnl:SetSize(ScrH() / 10, ScrH() / 10)
     itemPnl.Paint = function(pnl, w, h)
       draw.RoundedBox(0, 0, 0, w, h, InvUI.Colors.ItemColor)
       surface.SetDrawColor(InvUI.Colors.Primary.r,
@@ -37,40 +33,27 @@ function PANEL:ShowItems()
       surface.DrawOutlinedRect(0, 0, w, h, 1)
     end
 
-    itemPnl.btnBar = itemPnl:Add("DPanel")
-    itemPnl.btnBar:Dock(BOTTOM)
-    itemPnl.btnBar:SetTall(ScrH() / 50)
-    itemPnl.btnBar.Paint = nil
-
-    itemPnl.btnBar.dropBtn = itemPnl.btnBar:Add("DButton")
-    itemPnl.btnBar.dropBtn:Dock(LEFT)
-    itemPnl.btnBar.dropBtn:SetWide(ScrH() / 20)
-    itemPnl.btnBar.dropBtn:SetFont("inv_ItemButtons")
-    itemPnl.btnBar.dropBtn:SetTextColor(InvUI.Colors.Text)
-    itemPnl.btnBar.dropBtn:SetText("Drop")
-    itemPnl.btnBar.dropBtn.Paint = nil
-    itemPnl.btnBar.dropBtn.DoClick = function(pnl)
-      net.Start("DropItem")
-        net.WriteUInt(i, 16)
-      net.SendToServer()
-    end
-
-    itemPnl.btnBar.useBtn = itemPnl.btnBar:Add("DButton")
-    itemPnl.btnBar.useBtn:Dock(RIGHT)
-    itemPnl.btnBar.useBtn:SetWide(ScrH() / 20)
-    itemPnl.btnBar.useBtn:SetFont("inv_ItemButtons")
-    itemPnl.btnBar.useBtn:SetTextColor(InvUI.Colors.Text)
-    itemPnl.btnBar.useBtn:SetText("Use")
-    itemPnl.btnBar.useBtn.Paint = nil
-    itemPnl.btnBar.useBtn.DoClick = function(pnl)
-      net.Start("UseItem")
-        net.WriteUInt(i, 16)
-      net.SendToServer()
-    end
-
-    itemPnl.icon = itemPnl:Add("ModelImage")
+    itemPnl.icon = itemPnl:Add("SpawnIcon")
     itemPnl.icon:Dock(FILL)
     itemPnl.icon:SetModel(item.model)
+    itemPnl.icon:SetTooltip(nil)
+    itemPnl.icon.DoClick = function(pnl)
+      local ItemMenu = DermaMenu()
+      ItemMenu.DropOption = ItemMenu:AddOption("Drop", function(opt)
+        net.Start("DropItem")
+          net.WriteUInt(i, 16)
+        net.SendToServer()
+      end)
+      ItemMenu.DropOption:SetIcon("icon16/arrow_down.png")
+      ItemMenu.UseOption = ItemMenu:AddOption("Use", function(opt)
+        net.Start("UseItem")
+          net.WriteUInt(i, 16)
+        net.SendToServer()
+      end)
+      ItemMenu.UseOption:SetIcon("icon16/accept.png")
+      ItemMenu:Open()
+    end
+    
   end
 end
 

@@ -1,4 +1,4 @@
-MaxDefInvCap = 20
+MaxDefInvCap = 999
 
 InvBlacklist = {}
 InvWhitelist = {}

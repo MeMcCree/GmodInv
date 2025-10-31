@@ -74,14 +74,23 @@ end
 function _E:GetItem()
   local item = {}
 
+  item.classname = self:GetClass()
+  item.model = self:GetModel()
+  item.name = ""-- item.classname
+  
+  local PrintName = scripted_ents.GetMember(item.classname, "PrintName")
+  if (PrintName) then
+    item.name = PrintName
+  end
+
   if (self:IsWeapon()) then
     item.weapon = true
     item.clip1 = self:Clip1()
     item.clip2 = self:Clip2()
+
+    item.name = self:GetPrintName()
   end
 
-  item.classname = self:GetClass()
-  item.model = self:GetModel()
   return item
 end
 
