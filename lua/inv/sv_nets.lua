@@ -14,6 +14,7 @@ local nets = {
   "OpenStorage",
   "MoveToStorage",
   "MoveFromStorage",
+  "StorageClosed"
 }
 
 for _, v in ipairs(nets) do

@@ -5,6 +5,58 @@ ENT.Spawnable = false
 
 ENT.Model = "models/items/item_item_crate.mdl"
 
+function ENT:SetupDataTables()
+  self:NetworkVar("String", 0, "StorageName",
+  {
+    KeyName = "storage_name",
+    Edit = {type = "Generic", title = "Name of the storage", order = 0}
+  })
+  self:NetworkVar("String", 1, "StorageModel",
+  {
+    KeyName = "storage_model",
+    Edit = {type = "Generic", title = "Model", order = 1, waitforenter = true}
+  })
+  self:NetworkVar("String", 2, "Lootlist",
+  {
+    KeyName = "storage_lootlist",
+    Edit = {type = "Generic", title = "Lootlist", order = 2}
+  })
+  
+  self:NetworkVar("Int", "StorageSound",
+  {
+    KeyName = "storage_sound",
+    Edit = {type = "Combo", title = "Storage sounds", order = 3, text = "Wooden box", values = {
+      ["Wooden box"] = 0,
+      ["Metal drawer"] = 1,
+      -- ...
+    }}
+  })
+
+  self:NetworkVar("Int", "StorageBackground",
+  {
+    KeyName = "storage_uibackground",
+    Edit = {type = "Combo", title = "Storage theme", order = 4, text = "Wooden box", values = {
+      ["Wooden box"] = 0,
+      ["Metal drawer"] = 1,
+      -- ...
+    }}
+  })
+  
+  self:NetworkVar("Int", "MaxCapacity",
+  {
+    KeyName = "storage_maxcapacity",
+    Edit = {type = "Int", title = "Max capacity", order = 5, min = 1, max = 1000}
+  })
+  
+  if (SERVER) then
+    self:SetMaxCapacity(20)
+    self:NetworkVarNotify("MaxCapacity", self.MaxCapacityChanged)
+    self:NetworkVarNotify("StorageModel", self.StorageModelChanged)
+  else
+    self:NetworkVarNotify("MaxCapacity", self.MaxCapacityChanged)
+  end
+end
+
 if (SERVER) then
   function ENT:Initialize()
       self:SetModel(self.Model)
@@ -30,10 +82,26 @@ if (SERVER) then
     self:OpenStorage(activator)
   end
 
+  function ENT:MaxCapacityChanged(name, old, new)
+    self.Storage.MaxCapacity = new
+  end
+
+  function ENT:StorageModelChanged(name, old, new)
+    if (IsUselessModel(new)) then return end
+    self:SetModel(new)
+    self:PhysicsInit(SOLID_VPHYSICS)
+    self:SetMoveType(MOVETYPE_VPHYSICS)
+    self:SetSolid(SOLID_VPHYSICS)
+    local phys = self:GetPhysicsObject()
+    if (IsValid(phys)) then
+      phys:Wake()
+    end
+  end
+
   function ENT:SetStorage(storage)
       self.Storage = storage
       self:SendEachItemToStorageClient(item)
-      self:ChangeStorageMaxCapClient(self.Storage.MaxCapacity)
+      self:SetMaxCapacity(storage.MaxCapacity)
   end
 
   function ENT:SendEachItemToStorageClient(item)
@@ -46,13 +114,6 @@ if (SERVER) then
     net.Start("SendItemToStorageClient")
       net.WriteEntity(self)
       net.WriteTable(item)
-    net.Broadcast()
-  end
-
-  function ENT:ChangeStorageMaxCapClient(capacity)
-    net.Start("ChangeStorageMaxCapClient")
-      net.WriteEntity(self)
-      net.WriteUInt(capacity, 16)
     net.Broadcast()
   end
 
@@ -114,6 +175,9 @@ if (SERVER) then
     local id = net.ReadUInt(16)
     storage:MoveFromStorage(ply, id)
   end)
+
+  net.Receive("StorageClosed", function(len, ply)
+  end)
 else
   function ENT:Initialize()
       self.Storage = {}
@@ -129,6 +193,7 @@ else
 
   function ENT:OpenStorage()
     if (IsValid(storagePnl)) then return end
+    
     storagePnl = vgui.Create("inv_frame")
     storagePnl.Owner = self
     storagePnl:SetSize(ScrW() / 1.5, ScrH() / 1.25)
@@ -161,7 +226,7 @@ else
     storagePnl.storageItems.title:Dock(TOP)
     storagePnl.storageItems.title:SetFont("inv_Title")
     storagePnl.storageItems.title:SetTextColor(InvUI.Colors.Text)
-    storagePnl.storageItems.title:SetText("Storage")
+    storagePnl.storageItems.title:SetText(self:GetStorageName())
     storagePnl.storageItems.title:SizeToContents()
     storagePnl.storageItems.title:SetContentAlignment(5)
 
@@ -194,12 +259,32 @@ else
         itemPnl.icon:Dock(FILL)
         itemPnl.icon:SetModel(item.model)
         itemPnl.icon:SetTooltip(nil)
-        itemPnl.icon.DoClick = function(pnl)
-            net.Start("MoveToStorage")
-              net.WriteEntity(self)
-              net.WriteUInt(i, 16)
-            net.SendToServer()
+
+        itemPnl.icon.OnMousePressed = function(pnl, keyCode)
+          if (self.Storage.Capacity + 1 > self.Storage.MaxCapacity) then return end
+          if (TimedAction.active) then return end
+
+          if (keyCode == MOUSE_LEFT or keyCode == MOUSE_RIGHT) then
+            TimedAction.Start(0.5, function()
+              net.Start("MoveToStorage")
+                net.WriteEntity(self)
+                net.WriteUInt(i, 16)
+              net.SendToServer()
+            end)
+
+            itemPnl.icon.bar = itemPnl.icon:Add("progress_bar")
+            itemPnl.icon.bar:Dock(FILL)
+            itemPnl.icon.label:Remove()
+          end
         end
+
+        itemPnl.icon.label = itemPnl.icon:Add("DLabel")
+        itemPnl.icon.label:Dock(BOTTOM)
+        itemPnl.icon.label:SetTall(18)
+        itemPnl.icon.label:SetText(item.name)
+        itemPnl.icon.label:SetFont("inv_ItemName")
+        itemPnl.icon.label:SetTextColor(InvUI.Colors.Text)
+        itemPnl.icon.label:SetContentAlignment(5)
 
       end
     end
@@ -222,32 +307,54 @@ else
           surface.DrawOutlinedRect(0, 0, w, h, 1)
         end
 
-        itemPnl.btnBar = itemPnl:Add("DPanel")
-        itemPnl.btnBar:Dock(BOTTOM)
-        itemPnl.btnBar:SetTall(ScrH() / 50)
-        itemPnl.btnBar.Paint = nil
-
-        itemPnl.btnBar.moveToBtn = itemPnl.btnBar:Add("DButton")
-        itemPnl.btnBar.moveToBtn:Dock(FILL)
-        itemPnl.btnBar.moveToBtn:SetFont("inv_ItemButtons")
-        itemPnl.btnBar.moveToBtn:SetTextColor(InvUI.Colors.Text)
-        itemPnl.btnBar.moveToBtn:SetText("Take")
-        itemPnl.btnBar.moveToBtn.Paint = nil
-        itemPnl.btnBar.moveToBtn.DoClick = function(pnl)
-          net.Start("MoveFromStorage")
-            net.WriteEntity(self)
-            net.WriteUInt(i, 16)
-          net.SendToServer()
-        end
-
-        itemPnl.icon = itemPnl:Add("ModelImage")
+        itemPnl.icon = itemPnl:Add("SpawnIcon")
         itemPnl.icon:Dock(FILL)
         itemPnl.icon:SetModel(item.model)
+        itemPnl.icon:SetTooltip(nil)
+
+        itemPnl.icon.OnMousePressed = function(pnl, keyCode)
+          if (Inv.Capacity + 1 > Inv.MaxCapacity) then return end
+          if (TimedAction.active) then return end
+
+          if (keyCode == MOUSE_LEFT or keyCode == MOUSE_RIGHT) then
+            TimedAction.Start(0.5, function()
+              net.Start("MoveFromStorage")
+                net.WriteEntity(self)
+                net.WriteUInt(i, 16)
+              net.SendToServer()
+            end)
+
+            itemPnl.icon.bar = itemPnl.icon:Add("progress_bar")
+            itemPnl.icon.bar:Dock(FILL)
+            itemPnl.icon.label:Remove()
+          end
+        end
+
+        itemPnl.icon.label = itemPnl.icon:Add("DLabel")
+        itemPnl.icon.label:Dock(BOTTOM)
+        itemPnl.icon.label:SetTall(18)
+        itemPnl.icon.label:SetText(item.name)
+        itemPnl.icon.label:SetFont("inv_ItemName")
+        itemPnl.icon.label:SetTextColor(InvUI.Colors.Text)
+        itemPnl.icon.label:SetContentAlignment(5)
       end
     end
 
     storagePnl.invItems.ShowItems()
     storagePnl.storageItems.ShowItems()
+
+    storagePnl.OnRemove = function(pnl)
+      net.Start("StorageClosed")
+        net.WriteEntity(pnl.Owner)
+      net.SendToServer()
+    end
+  end
+
+  function ENT:MaxCapacityChanged(name, old, new)
+    self.Storage.MaxCapacity = new
+    if (IsValid(storagePnl)) then
+      storagePnl.storageItems.ShowItems()
+    end
   end
 
   net.Receive("OpenStorage", function()
@@ -262,16 +369,6 @@ else
     storage.Storage.Capacity = storage.Storage.Capacity + 1
     storage.Storage.Items[storage.Storage.Capacity] = item
 
-    if (IsValid(storagePnl)) then
-      storagePnl.storageItems.ShowItems()
-    end
-  end)
-
-  net.Receive("ChangeStorageMaxCapClient", function()
-    local storage = net.ReadEntity()
-    local capacity = net.ReadUInt(16)
-
-    storage.Storage.MaxCapacity = capacity
     if (IsValid(storagePnl)) then
       storagePnl.storageItems.ShowItems()
     end
