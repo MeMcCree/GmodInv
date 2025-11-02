@@ -34,6 +34,12 @@ function PANEL:PerformLayout(w, h)
   self.header.clsBtn:SetWide(self.header:GetTall())
 end
 
+function PANEL:OnKeyCodePressed(keyCode)
+  if (keyCode == KEY_X) then
+    self:Remove()
+  end
+end
+
 function PANEL:Paint(w, h)
   draw.RoundedBox(0, 0, 0, w, h, InvUI.Colors.Secondary)
 end

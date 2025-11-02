@@ -17,6 +17,10 @@ function PANEL:Init()
   end
 end
 
+function PANEL:OnRemove()
+  TimedAction.active = false
+end
+
 function PANEL:ShowItems()
   self.icons:Clear()
   for i = 1, Inv.Capacity do

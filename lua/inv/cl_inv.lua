@@ -40,3 +40,27 @@ net.Receive("RemoveItemByIdClient", function()
     storagePnl.invItems.ShowItems()
   end
 end)
+
+function TimedActionThink()
+  if (not TimedAction.active) then return end
+  if (CurTime() < TimedAction.endTime) then return end
+
+  if (TimedAction.action != nil) then
+    TimedAction.action()
+    TimedAction.active = false
+  end
+end
+
+TimedAction = TimedAction or {}
+TimedAction.startTime = TimedAction.startTime or 0
+TimedAction.endTime = TimedAction.endTime or 0
+TimedAction.action = TimedAction.action or nil
+TimedAction.active = TimedAction.active or false
+TimedAction.Start = function(delay, action)
+  TimedAction.startTime = CurTime()
+  TimedAction.endTime = TimedAction.startTime + delay
+  TimedAction.active = true
+  TimedAction.action = action
+end
+
+hook.Add("Think", "TimedActionThink", TimedActionThink)
